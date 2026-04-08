@@ -170,7 +170,7 @@ def get_derivatives_context(
 @mcp.tool
 async def get_liquidity_context(
     symbol: str = "BTCUSDT",
-    depth_limit: int = 200,
+    depth_limit: int = 100,
     liquidation_sample_seconds: int = 4,
     include_okx: bool | None = None,
 ) -> dict[str, Any]:
@@ -215,7 +215,7 @@ async def get_full_btc_context(
     limit: int = 12,
     fred_series: str = "FEDFUNDS,DGS10,UNRATE",
     entities: str = "IBIT,FBTC,GBTC",
-    depth_limit: int = 200,
+    depth_limit: int = 100,
     liquidation_sample_seconds: int = 4,
     include_okx: bool | None = None,
 ) -> dict[str, Any]:
