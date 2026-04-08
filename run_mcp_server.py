@@ -1,13 +1,19 @@
 from __future__ import annotations
 
-import uvicorn
-
 from app.mcp_config import load_mcp_server_config
+from app.mcp_server import mcp
 
 
 def main() -> None:
     config = load_mcp_server_config()
-    uvicorn.run("app.mcp_server:app", host=config.host, port=config.port, reload=False)
+    mcp.run(
+        transport="streamable-http",
+        host=config.host,
+        port=config.port,
+        path=config.path,
+        stateless_http=True,
+        show_banner=False,
+    )
 
 
 if __name__ == "__main__":
