@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: btc-context-mcp
+    runtime: python
+    buildCommand: pip install -r requirements-gateway.txt
+    startCommand: python run_mcp_server.py
+    autoDeploy: true
+    envVars:
+      - key: MCP_PUBLIC_BASE_URL
+        sync: false
+      - key: MCP_PATH
+        value: /mcp
+      - key: MCP_INCLUDE_OKX_LIQUIDITY
+        value: true
+      - key: GATEWAY_USER_AGENT
+        value: crypto-gpt-aggregator/0.1 you@example.com
+      - key: FRED_API_KEY
+        sync: false
+      - key: BLS_API_KEY
+        sync: false
+      - key: BEA_API_KEY
+        sync: false
+      - key: COINGECKO_DEMO_API_KEY
+        sync: false
+      - key: COINGECKO_PRO_API_KEY
+        sync: false
