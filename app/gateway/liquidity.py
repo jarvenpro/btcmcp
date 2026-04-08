@@ -40,17 +40,20 @@ class LiquidityContextBuilder:
         self,
         *,
         symbol: str = "BTCUSDT",
-        depth_limit: int = 200,
+        depth_limit: int = 100,
         liquidation_sample_seconds: int = 4,
         include_okx: bool = True,
     ) -> dict[str, Any]:
         symbol = symbol.upper()
-        depth_limit = max(50, min(depth_limit, 500))
+        requested_depth_limit = max(50, min(depth_limit, 500))
+        binance_depth_limit = self._normalize_binance_depth_limit(requested_depth_limit)
+        bybit_depth_limit = min(requested_depth_limit, 200)
+        okx_depth_limit = min(requested_depth_limit, 200)
         liquidation_sample_seconds = max(2, min(liquidation_sample_seconds, 8))
 
-        binance_book = self._get_binance_orderbook(symbol, depth_limit=depth_limit)
-        bybit_book = self._get_bybit_orderbook(symbol, depth_limit=min(depth_limit, 200))
-        okx_book = self._get_okx_orderbook(symbol, depth_limit=min(depth_limit, 200)) if include_okx else None
+        binance_book = self._get_binance_orderbook(symbol, depth_limit=binance_depth_limit)
+        bybit_book = self._get_bybit_orderbook(symbol, depth_limit=bybit_depth_limit)
+        okx_book = self._get_okx_orderbook(symbol, depth_limit=okx_depth_limit) if include_okx else None
 
         reference_price = (
             binance_book.get("mid_price")
@@ -73,6 +76,12 @@ class LiquidityContextBuilder:
             "generated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
             "symbol": symbol,
             "reference_price": reference_price,
+            "depth_limits": {
+                "requested": requested_depth_limit,
+                "binance": binance_depth_limit,
+                "bybit": bybit_depth_limit,
+                "okx": okx_depth_limit if include_okx else None,
+            },
             "venues": {
                 "binance": {
                     "orderbook": self._build_orderbook_summary("BINANCE", binance_book, reference_price),
@@ -93,6 +102,14 @@ class LiquidityContextBuilder:
 
         payload["combined"] = self._build_combined_liquidity_view(payload["venues"], reference_price)
         return payload
+
+    @staticmethod
+    def _normalize_binance_depth_limit(requested_depth_limit: int) -> int:
+        allowed_limits = (5, 10, 20, 50, 100, 500, 1000)
+        eligible_limits = [limit for limit in allowed_limits if limit <= requested_depth_limit]
+        if eligible_limits:
+            return eligible_limits[-1]
+        return 5
 
     def _get_binance_orderbook(self, symbol: str, *, depth_limit: int) -> dict[str, Any]:
         rows = self._http.get_json(
